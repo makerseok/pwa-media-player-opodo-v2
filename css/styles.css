@@ -147,6 +147,10 @@ nav .sidenav-trigger {
   position: fixed;
 }
 
+#modal-player video {
+  object-fit: fill;
+}
+
 /* time */
 #time-container {
   padding-left: 3rem;
