@@ -212,6 +212,7 @@ let player = videojs(document.querySelector('.video-js'), {
   preload: 'none',
   loadingSpinner: false,
   errorDisplay: false,
+  fill: true,
 });
 
 player.ready(async function () {
