@@ -1,6 +1,6 @@
 {
-  "name": "AD Wright",
-  "short_name": "ADWright",
+  "name": "Podo Player",
+  "short_name": "PodoPlayer",
   "start_url": "https://makerseok.github.io/pwa-player/index.html",
   "display": "standalone",
   "background_color": "#1f2a66",
