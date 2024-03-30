@@ -5,7 +5,7 @@ const FONT_CACHE_NAME = 'site-font-v1';
 const APEX_CACHE_NAME = 'site-apex-v1';
 
 const assets = [
-  '/pwa-video-player/',
+  '/pwa-video-player-opodo/',
   'index.html',
   'sw-installed.html',
   'js/app.js',
@@ -88,15 +88,8 @@ self.addEventListener('fetch', event => {
   // console.log('fetch event', event);
   const scope = self.registration.scope;
   const url = new URL(event.request.url);
-  const queryReplacedUrl = url.href
-    .replace(url.search, '')
-    .split('?')[0]
-    .split('#')[0];
-  if (
-    [scope, scope + 'index.html', scope + 'index.htm'].includes(
-      queryReplacedUrl,
-    )
-  ) {
+  const queryReplacedUrl = url.href.replace(url.search, '').split('?')[0].split('#')[0];
+  if ([scope, scope + 'index.html', scope + 'index.htm'].includes(queryReplacedUrl)) {
     event.respondWith(
       (async () => {
         const cachedResponse = await caches.match('sw-installed.html');
@@ -138,10 +131,7 @@ self.addEventListener('fetch', event => {
         return fetchVideo(event.request);
       }
       if (event.request.url.includes('fonts.gstatic.com')) {
-        console.log(
-          'event.request.url.includes("fonts.gstatic.com")',
-          event.request.url,
-        );
+        console.log('event.request.url.includes("fonts.gstatic.com")', event.request.url);
         return fetchOthers(event.request, FONT_CACHE_NAME);
       }
       const path = url.pathname;
