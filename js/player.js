@@ -765,5 +765,6 @@ function displayExternalContent(content, runningTime, callback) {
   element.innerHTML = content;
   setTimeout(() => {
     callback();
+    element.classList.add('.vjs-hidden');
   }, runningTime * 1000);
 }
