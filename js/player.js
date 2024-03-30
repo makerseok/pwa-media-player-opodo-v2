@@ -761,10 +761,10 @@ function schedulePlayVideo() {
 function displayExternalContent(content, runningTime, callback) {
   player.pause();
   const element = document.querySelector('.vjs-poster');
-  element.classList.remove('.vjs-hidden');
+  element.classList.remove('vjs-hidden');
   element.innerHTML = content;
   setTimeout(() => {
     callback();
-    element.classList.add('.vjs-hidden');
+    element.classList.add('vjs-hidden');
   }, runningTime * 1000);
 }
