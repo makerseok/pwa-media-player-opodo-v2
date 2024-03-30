@@ -709,9 +709,9 @@ function findData(item, target, todo) {
 
 async function saveExternalContent(url) {
   const { data, status } = await axios.get(url);
-  const dummy = document.getElementById('dummy');
+  // const dummy = document.getElementById('dummy');
   if (status === 200) {
-    dummy.innerHTML = data;
+    // dummy.innerHTML = data;
     player.externalContents[url] = data;
   }
 }

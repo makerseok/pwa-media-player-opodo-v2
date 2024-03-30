@@ -389,7 +389,7 @@ player.on('ended', async function () {
     console.log('external url', deviceUrl);
     console.log('currentItem', currentItem);
     nextItem.report.PLAY_ON = getFormattedDate(new Date());
-    displayExternalContent(player.externalContents[deviceUrl], playlist[nextIndex].runningTime, () => {
+    displayExternalContent(deviceUrl, playlist[nextIndex].runningTime, () => {
       gotoPlayableVideo(playlist, currentIndex);
       addReport(nextItem);
     });
@@ -758,11 +758,11 @@ function schedulePlayVideo() {
   return job;
 }
 
-function displayExternalContent(content, runningTime, callback) {
+function displayExternalContent(url, runningTime, callback) {
   player.pause();
-  const element = document.querySelector('.vjs-poster');
+  const element = document.querySelector('.external-content');
   element.classList.remove('vjs-hidden');
-  element.innerHTML = content;
+  element.src = url;
   setTimeout(() => {
     callback();
     element.classList.add('vjs-hidden');

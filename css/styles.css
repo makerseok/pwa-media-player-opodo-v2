@@ -151,7 +151,19 @@ nav .sidenav-trigger {
   object-fit: fill;
 } */
 
-#modal-player .vjs-poster {
+/* #modal-player .vjs-poster {
+  overflow: hidden;
+} */
+.external-content {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+}
+.external-content * {
   overflow: hidden;
 }
 
