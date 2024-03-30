@@ -782,7 +782,22 @@ async function displayExternalContent(url, runningTime, playlist, currentIndex, 
   const { status } = await axios.get(url);
   if (status !== 200) {
     console.log('url is not available');
-    await gotoPlayableVideo(playlist, currentIndex);
+    if (
+      playlist[currentIndex].periodYn === 'N' &&
+      currentIndex >= (await getPlayableVideo(playlist, currentIndex)) &&
+      player.type !== 'rad'
+    ) {
+      console.log('periodYn is N!');
+      const nextPlaylist = getNextPlaylist();
+      console.log('next playlist is', nextPlaylist);
+      player.type = nextPlaylist.type;
+      player.playlist(nextPlaylist.playlist);
+      const lastPlayed = await getLastPlayedIndex(nextPlaylist.playlist);
+      await gotoPlayableVideo(nextPlaylist.playlist, lastPlayed);
+    } else {
+      gotoPlayableVideo(playlist, currentIndex);
+      addReport(report);
+    }
   }
   const element = document.querySelector('.external-content');
   element.classList.remove('vjs-hidden');
