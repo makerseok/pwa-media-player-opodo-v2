@@ -313,11 +313,11 @@ async function initPlayer(crads, device, sudo = false) {
   const externalUrls = getFilteredExternalUrl(crads);
   try {
     await fetchVideoAll(deduplicatedUrls, sudo);
-    console.log('externalUrls', externalUrls);
-    for (const [index, url] of externalUrls.entries()) {
-      console.log('external', url);
-      await saveExternalContent(url);
-    }
+    // console.log('externalUrls', externalUrls);
+    // for (const [index, url] of externalUrls.entries()) {
+    //   console.log('external', url);
+    //   await saveExternalContent(url);
+    // }
     console.log('finish fetching');
     if (!mqtt) {
       initWebsocket();
