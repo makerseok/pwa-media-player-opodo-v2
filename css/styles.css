@@ -151,6 +151,15 @@ nav .sidenav-trigger {
   object-fit: fill;
 }
 
+#modal-player .vjs-poster {
+  overflow: hidden;
+}
+
+/* api 데이터 캐싱용 div */
+#dummy {
+  display: none;
+}
+
 /* time */
 #time-container {
   padding-left: 3rem;

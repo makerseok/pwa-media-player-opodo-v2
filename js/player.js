@@ -216,6 +216,7 @@ player.ready(async function () {
   player.ceadJobs = [];
   player.cpadJobs = [];
   player.playlistQueue = [];
+  player.externalContents = {};
   console.log('player ready');
 
   const params = new URLSearchParams(location.search);
@@ -353,6 +354,8 @@ player.on('ended', async function () {
   const nextIndex = this.playlist.nextIndex();
   const lastIndex = this.playlist.lastIndex();
   const currentItem = playlist[currentIndex];
+  const nextItem = playlist[nextIndex];
+  const deviceUrl = playlist[nextIndex].deviceUrl;
 
   if (player.type === 'rad') {
     const videoInfo = {
@@ -382,6 +385,14 @@ player.on('ended', async function () {
       await player.play();
     }
     player.playlist.next();
+  } else if (player.externalContents[deviceUrl]) {
+    console.log('external url', deviceUrl);
+    console.log('currentItem', currentItem);
+    nextItem.report.PLAY_ON = getFormattedDate(new Date());
+    displayExternalContent(player.externalContents[deviceUrl], playlist[nextIndex].runningTime, () => {
+      gotoPlayableVideo(playlist, currentIndex);
+      addReport(nextItem);
+    });
   } else {
     console.log('video is not cached');
     await gotoPlayableVideo(playlist, currentIndex);
@@ -508,7 +519,7 @@ async function gotoPlayableVideo(playlist, currentIndex) {
   const targetIndex = await getPlayableVideo(playlist, currentIndex);
   player.playlist.currentItem(targetIndex);
   player.currentTime(0);
-  console.log('go to', currentIndex);
+  console.log('go to', targetIndex);
   await player.play();
 }
 
@@ -745,4 +756,14 @@ function schedulePlayVideo() {
     playVideo();
   });
   return job;
+}
+
+function displayExternalContent(content, runningTime, callback) {
+  player.pause();
+  const element = document.querySelector('.vjs-poster');
+  element.classList.remove('.vjs-hidden');
+  element.innerHTML = content;
+  setTimeout(() => {
+    callback();
+  }, runningTime * 1000);
 }

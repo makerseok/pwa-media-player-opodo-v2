@@ -253,6 +253,21 @@ function getFilteredVideoUrl(ads) {
   return deduplicatedUrls;
 }
 
+function getFilteredExternalUrl(ads) {
+  let urls = [];
+  const categoryIds = ads.items.map(e => e.CATEGORY_ID);
+  findData(ads.slots, 'SLOT_ID', (_key, _value, object) => {
+    if (categoryIds.includes(object.CATEGORY_ID) && object.files) {
+      findData(object, 'DEVICE_URL', (key, value, _object) => {
+        urls.push(value);
+      });
+    }
+  });
+  const deduplicatedUrls = [...new Set(urls)];
+
+  return deduplicatedUrls;
+}
+
 function getVideoUrl(ads) {
   let urls = [];
   findData(ads, 'VIDEO_URL', (_key, value, _object) => {
@@ -295,8 +310,14 @@ async function initPlayer(crads, device, sudo = false) {
   player.videoList = itemsToVideoList(crads);
 
   const deduplicatedUrls = getFilteredVideoUrl(crads);
+  const externalUrls = getFilteredExternalUrl(crads);
   try {
     await fetchVideoAll(deduplicatedUrls, sudo);
+    console.log('externalUrls', externalUrls);
+    for (const [index, url] of externalUrls.entries()) {
+      console.log('external', url);
+      await saveExternalContent(url);
+    }
     console.log('finish fetching');
     if (!mqtt) {
       initWebsocket();
@@ -602,12 +623,16 @@ const fileToPlaylistSrc = file => {
     sources: [{ src: file.VIDEO_URL, type: 'video/mp4' }],
     isHivestack: file.HIVESTACK_YN,
     hivestackUrl: file.API_URL,
+    isUrl: file.URL_YN,
+    deviceUrl: file.DEVICE_URL,
     runningTime: file.RUNNING_TIME,
     report: {
       COMPANY_ID: player.companyId,
       DEVICE_ID: player.deviceId,
       FILE_ID: file.FILE_ID,
       HIVESTACK_YN: file.HIVESTACK_YN,
+      URL_YN: file.URL_YN,
+      DEVICE_URL: file.DEVICE_URL,
       // HIVESTACK_URL: file.VIDEO_URL,
       PLAY_ON: null,
     },
@@ -679,5 +704,14 @@ function findData(item, target, todo) {
         findData(miniArray[f], target, todo);
       }
     }
+  }
+}
+
+async function saveExternalContent(url) {
+  const { data, status } = await axios.get(url);
+  const dummy = document.getElementById('dummy');
+  if (status === 200) {
+    dummy.innerHTML = data;
+    player.externalContents[url] = data;
   }
 }

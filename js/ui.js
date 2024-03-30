@@ -59,11 +59,7 @@ const applyPosition = position => {
 
 async function initTime() {
   const date = new Date();
-  $('#local-time').text(
-    `${addHyphen(getFormattedDate(date))}.${String(
-      date.getMilliseconds(),
-    ).padStart(3, '0')}`,
-  );
+  $('#local-time').text(`${addHyphen(getFormattedDate(date))}.${String(date.getMilliseconds()).padStart(3, '0')}`);
   clearInterval(refreshTime);
   refreshTime = setInterval(() => {
     updateTime(95);
@@ -73,9 +69,7 @@ async function initTime() {
 function updateTime() {
   const localDate = new Date();
   $('#local-time').text(
-    `${addHyphen(getFormattedDate(localDate))}.${String(
-      localDate.getMilliseconds(),
-    ).padStart(3, '0')}`,
+    `${addHyphen(getFormattedDate(localDate))}.${String(localDate.getMilliseconds()).padStart(3, '0')}`,
   );
 }
 
@@ -199,16 +193,11 @@ const createPagination = (length, currentPage) => {
   const videoPagination = document.querySelector('#video-pagination');
   const pages = parseInt(length / PAGE_SIZE);
   const leftArrowClass = currentPage === 1 ? 'disabled' : 'waves-effect';
-  const rightArrowClass =
-    currentPage === pages + 1 ? 'disabled' : 'waves-effect';
+  const rightArrowClass = currentPage === pages + 1 ? 'disabled' : 'waves-effect';
   const leftAnchorAttribute =
-    currentPage === 1
-      ? 'disabled'
-      : `onclick="renderVideoList(player.videoList, ${currentPage - 1})"`;
+    currentPage === 1 ? 'disabled' : `onclick="renderVideoList(player.videoList, ${currentPage - 1})"`;
   const rightAnchorAttribute =
-    currentPage === pages + 1
-      ? 'disabled'
-      : `onclick="renderVideoList(player.videoList, ${currentPage + 1})"`;
+    currentPage === pages + 1 ? 'disabled' : `onclick="renderVideoList(player.videoList, ${currentPage + 1})"`;
 
   let paginationInnerHTML = `<li class="${leftArrowClass}"><a ${leftAnchorAttribute}><i class="material-icons">chevron_left</i></a></li>`;
   for (let i = 1; i <= pages + 1; i++) {
@@ -289,9 +278,7 @@ function renderCategoryTree(crads) {
       categoryNodeCancellation(this, crads);
     });
     const categoryId = $(item).data('category-id');
-    const filteredCrads = crads.slots.filter(
-      slot => slot.CATEGORY_ID === categoryId,
-    )[0];
+    const filteredCrads = crads.slots.filter(slot => slot.CATEGORY_ID === categoryId)[0];
 
     if (filteredCrads) {
       const slots = filteredCrads.slots;
@@ -353,8 +340,10 @@ function categoryNodeCancellation(root, crads) {
         if (value == rn && obj.SLOT_ID == slotId && obj.HIVESTACK_YN === 'N') {
           isCached(obj.VIDEO_URL).then(result => {
             if (!result) {
-              item.classList.add('cancellation');
-              $(item).jstree().set_icon(item, 'jstree-none');
+              if (!player.externalContents[obj.DEVICE_URL]) {
+                item.classList.add('cancellation');
+                $(item).jstree().set_icon(item, 'jstree-none');
+              }
             }
           });
         }
@@ -417,9 +406,7 @@ function createSwitchElement(isLocked) {
   const lockPositionSwitchInput = lockPositionSwitch.querySelector('input');
   lockPositionSwitchInput.checked = isLocked;
   player.locked = isLocked;
-  lockPositionSwitchInput.addEventListener('change', () =>
-    applyLockPosition(lockPositionSwitchInput),
-  );
+  lockPositionSwitchInput.addEventListener('change', () => applyLockPosition(lockPositionSwitchInput));
   return lockPositionSwitch;
 }
 
