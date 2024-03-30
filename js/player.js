@@ -358,12 +358,7 @@ player.on('error', async function (e) {
   if (currentItem.isUrl === 'Y') {
     player.isUrl = true;
     currentItem.report.PLAY_ON = getFormattedDate(new Date());
-    displayExternalContent(deviceUrl, currentItem.runningTime, () => {
-      if (player.isUrl) {
-        gotoPlayableVideo(playlist, currentIndex);
-        addReport(currentItem);
-      }
-    });
+    displayExternalContent(deviceUrl, currentItem.runningTime, playlist, currentIndex, currentItem);
   } else {
     await gotoPlayableVideo(player.playlist(), player.playlist.currentIndex());
   }
@@ -406,17 +401,12 @@ player.on('ended', async function () {
       await player.play();
     }
     player.playlist.next();
-  } else if (player.externalContents[deviceUrl]) {
+  } else if (nextItem.isUrl === 'Y') {
     console.log('external url', deviceUrl);
     console.log('currentItem', currentItem);
     nextItem.report.PLAY_ON = getFormattedDate(new Date());
     player.isUrl = true;
-    displayExternalContent(deviceUrl, nextItem.runningTime, () => {
-      if (player.isUrl) {
-        gotoPlayableVideo(playlist, currentIndex);
-        addReport(nextItem);
-      }
-    });
+    displayExternalContent(deviceUrl, nextItem.runningTime, playlist, currentIndex, nextItem);
   } else {
     console.log('video is not cached');
     await gotoPlayableVideo(playlist, currentIndex);
@@ -713,16 +703,18 @@ const scheduleVideo = async (startDate, playlist, type) => {
   if (hyphenStartDate < new Date()) {
     return false;
   }
-  const urls = playlist.map(v => v.sources[0].src).filter(src => src);
+  // const urls = playlist.map(v => v.sources[0].src).filter(src => src);
 
-  const deduplicatedUrls = [...new Set(urls)];
+  // const deduplicatedUrls = [...new Set(urls)];
+  const deduplicatedPlaylist = [...new Set(playlist.map(JSON.stringify))].map(JSON.parse);
   let cachedCount = 0;
-  for (const [index, url] of deduplicatedUrls.entries()) {
+  for (const [index, obj] of deduplicatedPlaylist.entries()) {
     try {
-      if (await isCached(url)) {
+      if ((await isCached(obj.sources[0].src)) || obj.isUrl === 'Y') {
         cachedCount++;
+        continue;
       }
-      const response = await axios.get(url);
+      const response = await axios.get(obj.sources[0].src);
       if (response.status === 200) {
         cachedCount++;
       }
@@ -785,12 +777,33 @@ function schedulePlayVideo() {
   return job;
 }
 
-function displayExternalContent(url, runningTime, callback) {
+async function displayExternalContent(url, runningTime, playlist, currentIndex, report) {
   player.pause();
+  const { status } = await axios.get(url);
+  if (status !== 200) {
+    console.log('url is not available');
+    await gotoPlayableVideo(playlist, currentIndex);
+  }
   const element = document.querySelector('.external-content');
   element.classList.remove('vjs-hidden');
   element.src = url;
-  setTimeout(() => {
-    callback();
+  setTimeout(async () => {
+    if (!player.isUrl) return;
+    if (
+      playlist[currentIndex].periodYn === 'N' &&
+      currentIndex >= (await getPlayableVideo(playlist, currentIndex)) &&
+      player.type !== 'rad'
+    ) {
+      console.log('periodYn is N!');
+      const nextPlaylist = getNextPlaylist();
+      console.log('next playlist is', nextPlaylist);
+      player.type = nextPlaylist.type;
+      player.playlist(nextPlaylist.playlist);
+      const lastPlayed = await getLastPlayedIndex(nextPlaylist.playlist);
+      await gotoPlayableVideo(nextPlaylist.playlist, lastPlayed);
+    } else {
+      gotoPlayableVideo(playlist, currentIndex);
+      addReport(report);
+    }
   }, runningTime * 1000);
 }
