@@ -339,13 +339,34 @@ player.on('seeking', () => {
 
   playlist[currentIndex].report.PLAY_ON = getFormattedDate(new Date());
 
+  const element = document.querySelector('.external-content');
+  element.classList.add('vjs-hidden');
+  player.isUrl = false;
+
   console.log('PLAY_ON modified when seeking!', playlist[currentIndex].report.PLAY_ON);
   player.playlist(playlist, currentIndex);
 });
 
-player.on('error', async () => {
+player.on('error', async function (e) {
   console.log('error!!!');
-  await gotoPlayableVideo(player.playlist(), player.playlist.currentIndex());
+  const playlist = this.playlist();
+  const currentIndex = this.playlist.currentIndex();
+  const nextIndex = this.playlist.nextIndex();
+  const currentItem = playlist[currentIndex];
+  const deviceUrl = playlist[nextIndex].deviceUrl;
+
+  if (currentItem.isUrl === 'Y') {
+    player.isUrl = true;
+    currentItem.report.PLAY_ON = getFormattedDate(new Date());
+    displayExternalContent(deviceUrl, currentItem.runningTime, () => {
+      if (player.isUrl) {
+        gotoPlayableVideo(playlist, currentIndex);
+        addReport(currentItem);
+      }
+    });
+  } else {
+    await gotoPlayableVideo(player.playlist(), player.playlist.currentIndex());
+  }
 });
 
 player.on('ended', async function () {
@@ -379,7 +400,7 @@ player.on('ended', async function () {
     player.playlist(nextPlaylist.playlist);
     const lastPlayed = await getLastPlayedIndex(nextPlaylist.playlist);
     await gotoPlayableVideo(nextPlaylist.playlist, lastPlayed);
-  } else if (await isCached(playlist[nextIndex].sources[0].src)) {
+  } else if (await isCached(nextItem.sources[0].src)) {
     console.log('video is cached, index is', nextIndex);
     if (currentIndex === nextIndex) {
       await player.play();
@@ -389,9 +410,12 @@ player.on('ended', async function () {
     console.log('external url', deviceUrl);
     console.log('currentItem', currentItem);
     nextItem.report.PLAY_ON = getFormattedDate(new Date());
-    displayExternalContent(deviceUrl, playlist[nextIndex].runningTime, () => {
-      gotoPlayableVideo(playlist, currentIndex);
-      addReport(nextItem);
+    player.isUrl = true;
+    displayExternalContent(deviceUrl, nextItem.runningTime, () => {
+      if (player.isUrl) {
+        gotoPlayableVideo(playlist, currentIndex);
+        addReport(nextItem);
+      }
     });
   } else {
     console.log('video is not cached');
@@ -695,6 +719,9 @@ const scheduleVideo = async (startDate, playlist, type) => {
   let cachedCount = 0;
   for (const [index, url] of deduplicatedUrls.entries()) {
     try {
+      if (await isCached(url)) {
+        cachedCount++;
+      }
       const response = await axios.get(url);
       if (response.status === 200) {
         cachedCount++;
@@ -765,6 +792,5 @@ function displayExternalContent(url, runningTime, callback) {
   element.src = url;
   setTimeout(() => {
     callback();
-    element.classList.add('vjs-hidden');
   }, runningTime * 1000);
 }
