@@ -147,9 +147,9 @@ nav .sidenav-trigger {
   position: fixed;
 }
 
-#modal-player video {
+/* #modal-player video {
   object-fit: fill;
-}
+} */
 
 #modal-player .vjs-poster {
   overflow: hidden;
