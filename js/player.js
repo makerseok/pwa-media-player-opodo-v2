@@ -1,5 +1,5 @@
 const VIDEO_CACHE_NAME = 'site-video-v4';
-const DEVICE_ID_AUTH = '5CAE46D0460AFC9035AFE9AE32CD146539EDF83B';
+const DEVICE_ID_AUTH = '2349E15DDFACC1D1B3E74FDBD62C32059AB53FD2';
 
 /**
  * 전달받은 deviceId 값이 유효할 경우 player 초기화
@@ -55,9 +55,7 @@ const fetchVideoAll = async (urls, sudo = false) => {
     .where('cachedOn')
     .between(
       getFormattedDate(new Date(new Date().toLocaleDateString())),
-      getFormattedDate(
-        addMinutes(new Date(new Date().toLocaleDateString()), 1440),
-      ),
+      getFormattedDate(addMinutes(new Date(new Date().toLocaleDateString()), 1440)),
       false,
     )
     .and(item => item.deviceId === player.deviceId)
@@ -196,10 +194,7 @@ const getFormattedDate = date => {
  * @returns { string } 하이픈이 추가된 "yyyy-mm-dd" 형식 문자열
  */
 const addHyphen = dateString => {
-  const addedDateString = dateString.replace(
-    /(\d{4})(\d{2})(\d{2})/g,
-    '$1-$2-$3',
-  );
+  const addedDateString = dateString.replace(/(\d{4})(\d{2})(\d{2})/g, '$1-$2-$3');
   return addedDateString;
 };
 
@@ -296,9 +291,7 @@ player.on('loadeddata', async function () {
 
   try {
     if (playlist[nextIndex].isHivestack === 'Y') {
-      const hivestackInfo = await getUrlFromHS(
-        playlist[nextIndex].hivestackUrl,
-      );
+      const hivestackInfo = await getUrlFromHS(playlist[nextIndex].hivestackUrl);
       console.log('hivestackInfo', hivestackInfo);
       if (hivestackInfo.success) {
         try {
@@ -311,10 +304,7 @@ player.on('loadeddata', async function () {
         }
       }
     }
-    if (
-      playlist[previousIndex].isHivestack === 'Y' &&
-      previousIndex != nextIndex
-    ) {
+    if (playlist[previousIndex].isHivestack === 'Y' && previousIndex != nextIndex) {
       playlist[previousIndex].sources[0].src = null;
       playlist[previousIndex].reportUrl = null;
       playlist[previousIndex].report.HIVESTACK_URL = null;
@@ -348,10 +338,7 @@ player.on('seeking', () => {
 
   playlist[currentIndex].report.PLAY_ON = getFormattedDate(new Date());
 
-  console.log(
-    'PLAY_ON modified when seeking!',
-    playlist[currentIndex].report.PLAY_ON,
-  );
+  console.log('PLAY_ON modified when seeking!', playlist[currentIndex].report.PLAY_ON);
   player.playlist(playlist, currentIndex);
 });
 
@@ -443,10 +430,7 @@ async function getLastPlayedIndex(playlists) {
       return categoryIdPlaylists[0].idx;
     }
     const fileIdPlaylists = slotIdPlaylists.filter((video, idx) => {
-      return (
-        video.report.fileId === lastPlayed.fileId &&
-        video.idx === lastPlayed.videoIndex
-      );
+      return video.report.fileId === lastPlayed.fileId && video.idx === lastPlayed.videoIndex;
     });
     if (fileIdPlaylists.length === 0) {
       return slotIdPlaylists[0].idx;
@@ -501,9 +485,7 @@ async function getPlayableVideo(playlist, currentIndex) {
   const distances = playlist.map((e, idx) => {
     return { distance: idx - currentIndex, idx: idx };
   });
-  const sortedDistances = distances
-    .filter(e => e.distance > 0)
-    .concat(distances.filter(e => e.distance < 0));
+  const sortedDistances = distances.filter(e => e.distance > 0).concat(distances.filter(e => e.distance < 0));
 
   let success = false;
   for (let i = 0; i < sortedDistances.length; i++) {
@@ -611,80 +593,72 @@ function getNextPlaylist() {
 function cronVideo(date, playlist, type) {
   if (playlist.length === 1 && playlist[0].isHivestack === 'Y') {
     const before2Min = addMinutes(date, -2);
-    const job = Cron(
-      before2Min,
-      { maxRuns: 1, context: playlist },
-      async (_self, context) => {
-        const hivestackInfo = await getUrlFromHS(context[0].hivestackUrl);
-        console.log('scheduled hivestackInfo', hivestackInfo);
-        if (hivestackInfo.success) {
-          try {
-            await axios.get(hivestackInfo.videoUrl);
-            context[0].sources[0].src = hivestackInfo.videoUrl;
-            context[0].reportUrl = hivestackInfo.reportUrl;
-            context[0].report.HIVESTACK_URL = hivestackInfo.videoUrl;
-          } catch (error) {
-            console.log('error on fetching hivestack url');
-          }
-          cronVideo(date, context, type);
+    const job = Cron(before2Min, { maxRuns: 1, context: playlist }, async (_self, context) => {
+      const hivestackInfo = await getUrlFromHS(context[0].hivestackUrl);
+      console.log('scheduled hivestackInfo', hivestackInfo);
+      if (hivestackInfo.success) {
+        try {
+          await axios.get(hivestackInfo.videoUrl);
+          context[0].sources[0].src = hivestackInfo.videoUrl;
+          context[0].reportUrl = hivestackInfo.reportUrl;
+          context[0].report.HIVESTACK_URL = hivestackInfo.videoUrl;
+        } catch (error) {
+          console.log('error on fetching hivestack url');
         }
-      },
-    );
+        cronVideo(date, context, type);
+      }
+    });
     console.log('scheduled on', before2Min);
     return job;
   } else {
-    const job = Cron(
-      date,
-      { maxRuns: 1, context: playlist },
-      async (_self, context) => {
-        console.log('cron context', context);
-        console.log('schedule type', type);
-        console.log('player type', player.type);
-        console.log('player isEnd', player.isEnd);
-        const queueItem = { type, playlist: context };
-        if (type === 'ead') {
+    const job = Cron(date, { maxRuns: 1, context: playlist }, async (_self, context) => {
+      console.log('cron context', context);
+      console.log('schedule type', type);
+      console.log('player type', player.type);
+      console.log('player isEnd', player.isEnd);
+      const queueItem = { type, playlist: context };
+      if (type === 'ead') {
+        player.playlist(context);
+        player.isEnd = false;
+        player.type = type;
+        player.playlist.currentItem(0);
+        player.currentTime(0);
+      } else if (type === 'pad') {
+        if (player.type === 'rad') {
           player.playlist(context);
           player.isEnd = false;
           player.type = type;
           player.playlist.currentItem(0);
           player.currentTime(0);
-        } else if (type === 'pad') {
-          if (player.type === 'rad') {
-            player.playlist(context);
-            player.isEnd = false;
-            player.type = type;
-            player.playlist.currentItem(0);
-            player.currentTime(0);
-          }
-        } else if (type === 'rad') {
-          if (player.type === 'rad' || player.type === undefined) {
-            player.playlist(context);
-            player.isEnd = false;
-            player.type = type;
-            player.radPlaylist = context;
-            const lastPlayed = await getLastPlayedIndex(context);
-            await gotoPlayableVideo(context, lastPlayed);
-          } else {
-            player.playlistQueue.push(queueItem);
-          }
         }
-        // player.playlist(context);
-        // player.isEnd = false;
-        // if (isPrimary) {
-        //   player.isPrimaryPlaylist = true;
-        //   player.primaryPlaylist = context;
-        //   const lastPlayed = await getLastPlayedIndex();
-        //   await gotoPlayableVideo(
-        //     player.primaryPlaylist,
-        //     lastPlayed,
-        //   );
-        // } else {
-        //   player.isPrimaryPlaylist = false;
-        //   player.playlist.currentItem(0);
-        //   player.currentTime(0);
-        // }
-      },
-    );
+      } else if (type === 'rad') {
+        if (player.type === 'rad' || player.type === undefined) {
+          player.playlist(context);
+          player.isEnd = false;
+          player.type = type;
+          player.radPlaylist = context;
+          const lastPlayed = await getLastPlayedIndex(context);
+          await gotoPlayableVideo(context, lastPlayed);
+        } else {
+          player.playlistQueue.push(queueItem);
+        }
+      }
+      // player.playlist(context);
+      // player.isEnd = false;
+      // if (isPrimary) {
+      //   player.isPrimaryPlaylist = true;
+      //   player.primaryPlaylist = context;
+      //   const lastPlayed = await getLastPlayedIndex();
+      //   await gotoPlayableVideo(
+      //     player.primaryPlaylist,
+      //     lastPlayed,
+      //   );
+      // } else {
+      //   player.isPrimaryPlaylist = false;
+      //   player.playlist.currentItem(0);
+      //   player.currentTime(0);
+      // }
+    });
     console.log('scheduled on', date, type);
     return job;
   }
@@ -745,8 +719,7 @@ async function playVideo() {
   const lastPlayed = await db.lastPlayed.get(player.deviceId);
   const date = new Date();
   const timestamp = Math.floor(date.getTime() / 1000);
-  const notPlayable =
-    timestamp < player.runon || timestamp > player.runoff || player.isEnd;
+  const notPlayable = timestamp < player.runon || timestamp > player.runoff || player.isEnd;
 
   if (lastPlayed) {
     const playOn = lastPlayed.playOn;

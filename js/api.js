@@ -1,5 +1,4 @@
-const BASE_URL =
-  'https://g01c8462bed7f63-product.adb.ap-seoul-1.oraclecloudapps.com/ords/podo/v1/ad/';
+const BASE_URL = 'https://g01c8462bed7f63-product.adb.ap-seoul-1.oraclecloudapps.com/ords/opodo/v1/ad/';
 const DEVICE_URL = 'devices';
 const POSITION_URL = 'devices/position';
 const POSITION_LOCKED_URL = 'devices/position/locked';
@@ -12,8 +11,7 @@ const REPORT_URL = 'report';
 const WEBSOCKET_URL = 'websocket';
 const DATE_URL = 'date';
 
-const HS_API_KEY =
-  '$2b$12$y4OZHQji3orEPdy2FtQJye:8f3bc93a-3b31-4323-b1a0-fd20584d9de4';
+const HS_API_KEY = '$2b$12$y4OZHQji3orEPdy2FtQJye:8f3bc93a-3b31-4323-b1a0-fd20584d9de4';
 
 /* 폴리필 코드 */
 if (!Promise.allSettled) {
@@ -57,9 +55,7 @@ const initPlayerWithApiResponses = async (sudo = false) => {
     const cachedVideo = await caches.open(VIDEO_CACHE_NAME);
     const cachedRequests = await cachedVideo.keys();
     const cachedUrls = cachedRequests.map(request => request.url);
-    const unusingUrls = cachedUrls.filter(
-      url => !deduplicatedUsingUrls.includes(url),
-    );
+    const unusingUrls = cachedUrls.filter(url => !deduplicatedUsingUrls.includes(url));
 
     console.log('unusingUrls', unusingUrls);
 
@@ -289,9 +285,7 @@ async function initPlayer(crads, device, sudo = false) {
   player.isDawn = offDate <= onDate;
   player.runon = Math.floor(onDate.getTime() / 1000);
   player.runoff =
-    offDate > onDate
-      ? Math.floor(offDate.getTime() / 1000)
-      : Math.floor(addMinutes(offDate, 1440).getTime() / 1000);
+    offDate > onDate ? Math.floor(offDate.getTime() / 1000) : Math.floor(addMinutes(offDate, 1440).getTime() / 1000);
 
   removeDefaultJobs();
   scheduleOnOff(on, off);
@@ -421,18 +415,10 @@ const scheduleOnOff = (on, off) => {
  */
 async function schedulePlaylists(playlists, currentTime) {
   for (let playlist of playlists) {
-    console.log(
-      currentTime,
-      playlist.start,
-      playlist.end,
-      playlist.categoryName,
-    );
+    console.log(currentTime, playlist.start, playlist.end, playlist.categoryName);
     const startDate = new Date(playlist.start);
     const hhMMssEnd = gethhMMss(new Date(playlist.end));
-    if (
-      player.isDawn &&
-      new Date(player.runon * 1000) > new Date(playlist.start)
-    ) {
+    if (player.isDawn && new Date(player.runon * 1000) > new Date(playlist.start)) {
       const nextDayStart = formatDatePlayAtDawn(playlist.start);
       console.log('Next Day Early Playlists');
       const overlappingDateIndex = player.cradJobs.findIndex((job, index) => {
@@ -451,9 +437,7 @@ async function schedulePlaylists(playlists, currentTime) {
       }
     }
     if (currentTime >= playlist.start && currentTime < playlist.end) {
-      console.log(
-        'currentTime >= playlist.start && currentTime < playlist.end',
-      );
+      console.log('currentTime >= playlist.start && currentTime < playlist.end');
       initPlayerPlaylist(playlist.files);
       player.cradJobs.push(scheduleOff(hhMMssEnd));
     }
@@ -535,15 +519,11 @@ function scheduleCallTime(callTime) {
  * @return { Object[] } 카테고리별 비디오 데이터
  */
 function cradsToPlaylists(crads) {
-  const tmpSlots = crads.slots.map(originSlot =>
-    formatSlotToPlaylist(originSlot),
-  );
+  const tmpSlots = crads.slots.map(originSlot => formatSlotToPlaylist(originSlot));
   const slots = [...new Set(tmpSlots)];
 
   const playlists = crads.items.map(item => {
-    const filteredSlots = slots.filter(
-      slot => slot.categoryId === item.CATEGORY_ID,
-    );
+    const filteredSlots = slots.filter(slot => slot.categoryId === item.CATEGORY_ID);
     return {
       categoryId: item.CATEGORY_ID,
       categoryName: item.CATEGORY_NAME,
@@ -570,9 +550,7 @@ function cpadsToPlaylists(cpads) {
     return playlist;
   });
   const playlists = cpads.items.map(item => {
-    const filteredSlots = slots.filter(
-      slot => slot.categoryId === item.CATEGORY_ID,
-    );
+    const filteredSlots = slots.filter(slot => slot.categoryId === item.CATEGORY_ID);
     const startDate = formatDatePlayAtDawn(item.START_DT);
     return {
       categoryId: item.CATEGORY_ID,
