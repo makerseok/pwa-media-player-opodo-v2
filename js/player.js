@@ -406,7 +406,7 @@ player.on('ended', async function () {
     console.log('currentItem', currentItem);
     nextItem.report.PLAY_ON = getFormattedDate(new Date());
     player.isUrl = true;
-    displayExternalContent(deviceUrl, nextItem.runningTime, playlist, currentIndex, nextItem);
+    displayExternalContent(deviceUrl, nextItem.runningTime, playlist, nextIndex, nextItem);
   } else {
     console.log('video is not cached');
     await gotoPlayableVideo(playlist, currentIndex);
@@ -455,7 +455,10 @@ async function getLastPlayedIndex(playlists) {
       return categoryIdPlaylists[0].idx;
     }
     const fileIdPlaylists = slotIdPlaylists.filter((video, idx) => {
-      return video.report.fileId === lastPlayed.fileId && video.idx === lastPlayed.videoIndex;
+      return (
+        (video.isUrl === 'Y' ? video.deviceUrl : video.report.FILE_ID) === lastPlayed.fileId &&
+        video.idx === lastPlayed.videoIndex
+      );
     });
     if (fileIdPlaylists.length === 0) {
       return slotIdPlaylists[0].idx;
@@ -514,7 +517,10 @@ async function getPlayableVideo(playlist, currentIndex) {
 
   let success = false;
   for (let i = 0; i < sortedDistances.length; i++) {
-    if (await isCached(playlist[sortedDistances[i].idx].sources[0].src)) {
+    if (
+      (await isCached(playlist[sortedDistances[i].idx].sources[0].src)) ||
+      playlist[sortedDistances[i].idx].isUrl === 'Y'
+    ) {
       return sortedDistances[i].idx;
     }
   }
@@ -787,6 +793,16 @@ async function displayExternalContent(url, runningTime, playlist, currentIndex, 
     element.src = url;
     setTimeout(async () => {
       if (!player.isUrl) return;
+      if (player.type === 'rad') {
+        const videoInfo = {
+          videoIndex: currentIndex,
+          playOn: report.report.PLAY_ON,
+          categoryId: playlist[currentIndex].categoryId,
+          slotId: playlist[currentIndex].slotId,
+          fileId: playlist[currentIndex].deviceUrl,
+        };
+        await storeLastPlayedVideo(videoInfo);
+      }
       if (
         playlist[currentIndex].periodYn === 'N' &&
         currentIndex >= (await getPlayableVideo(playlist, currentIndex)) &&
@@ -799,7 +815,7 @@ async function displayExternalContent(url, runningTime, playlist, currentIndex, 
         player.playlist(nextPlaylist.playlist);
         const lastPlayed = await getLastPlayedIndex(nextPlaylist.playlist);
         await gotoPlayableVideo(nextPlaylist.playlist, lastPlayed);
-      } else {
+      } else if (JSON.stringify(playlist) === JSON.stringify(player.playlist())) {
         gotoPlayableVideo(playlist, currentIndex);
         addReport(report);
       }
@@ -818,10 +834,9 @@ async function displayExternalContent(url, runningTime, playlist, currentIndex, 
       player.playlist(nextPlaylist.playlist);
       const lastPlayed = await getLastPlayedIndex(nextPlaylist.playlist);
       await gotoPlayableVideo(nextPlaylist.playlist, lastPlayed);
-    } else {
+    } else if (JSON.stringify(playlist) === JSON.stringify(player.playlist())) {
       gotoPlayableVideo(playlist, currentIndex);
       addReport(report);
     }
-    return;
   }
 }
