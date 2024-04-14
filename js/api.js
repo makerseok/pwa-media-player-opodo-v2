@@ -528,7 +528,8 @@ function scheduleOff(off) {
 function scheduleCallTime(callTime) {
   const job = Cron(hhMMssToCron(callTime), () => {
     console.log('cron info - call time', hhMMssToCron(callTime));
-    initPlayerWithApiResponses(true);
+    location.reload();
+    // initPlayerWithApiResponses(true);
   });
   return job;
 }
