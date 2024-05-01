@@ -201,7 +201,7 @@ const addHyphen = dateString => {
 let player = videojs(document.querySelector('.video-js'), {
   inactivityTimeout: 0,
   muted: true,
-  // autoplay: true,
+  autoplay: false,
   enableSourceset: true,
   controls: false,
   preload: 'none',
@@ -437,7 +437,7 @@ async function getLastPlayedIndex(playlists) {
   try {
     const lastPlayed = await db.lastPlayed.get(player.deviceId);
     if (!lastPlayed) {
-      return 0;
+      return -1;
     }
     const indexedPlaylist = playlists.map((element, idx) => {
       return { idx, ...element };
@@ -536,6 +536,7 @@ async function getPlayableVideo(playlist, currentIndex) {
  * @param { number } currentIndex 현재 index
  */
 async function gotoPlayableVideo(playlist, currentIndex) {
+  console.log(`gotoPlayableVideo - current index is ${currentIndex}`);
   const targetIndex = await getPlayableVideo(playlist, currentIndex);
   player.playlist.currentItem(targetIndex);
   player.currentTime(0);
@@ -762,13 +763,13 @@ async function playVideo() {
 
     if (player.paused() && player.lastChecked === playOn && !notPlayable) {
       console.log('paused! - play video');
-      player.play();
+      await player.play();
     }
     player.lastChecked = playOn;
   } else {
     if (player.paused() && !notPlayable) {
       console.log('paused! - play video');
-      player.play();
+      await player.play();
     }
     player.lastChecked = getFormattedDate(date);
   }
@@ -816,7 +817,7 @@ async function displayExternalContent(url, runningTime, playlist, currentIndex, 
         const lastPlayed = await getLastPlayedIndex(nextPlaylist.playlist);
         await gotoPlayableVideo(nextPlaylist.playlist, lastPlayed);
       } else if (JSON.stringify(playlist) === JSON.stringify(player.playlist())) {
-        gotoPlayableVideo(playlist, currentIndex);
+        await gotoPlayableVideo(playlist, currentIndex);
         addReport(report);
       }
     }, runningTime * 1000);
@@ -835,7 +836,7 @@ async function displayExternalContent(url, runningTime, playlist, currentIndex, 
       const lastPlayed = await getLastPlayedIndex(nextPlaylist.playlist);
       await gotoPlayableVideo(nextPlaylist.playlist, lastPlayed);
     } else if (JSON.stringify(playlist) === JSON.stringify(player.playlist())) {
-      gotoPlayableVideo(playlist, currentIndex);
+      await gotoPlayableVideo(playlist, currentIndex);
       addReport(report);
     }
   }
