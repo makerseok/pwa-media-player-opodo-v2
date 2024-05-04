@@ -437,7 +437,7 @@ async function getLastPlayedIndex(playlists) {
   try {
     const lastPlayed = await db.lastPlayed.get(player.deviceId);
     if (!lastPlayed) {
-      return 0;
+      return -1;
     }
     const indexedPlaylist = playlists.map((element, idx) => {
       return { idx, ...element };
