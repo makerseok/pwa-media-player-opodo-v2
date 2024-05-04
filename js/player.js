@@ -817,8 +817,8 @@ async function displayExternalContent(url, runningTime, playlist, currentIndex, 
         await gotoPlayableVideo(nextPlaylist.playlist, lastPlayed);
       } else if (JSON.stringify(playlist) === JSON.stringify(player.playlist())) {
         gotoPlayableVideo(playlist, currentIndex);
-        addReport(report);
       }
+      addReport(report);
     }, runningTime * 1000);
   } catch (error) {
     console.log('url is not available');
@@ -836,7 +836,7 @@ async function displayExternalContent(url, runningTime, playlist, currentIndex, 
       await gotoPlayableVideo(nextPlaylist.playlist, lastPlayed);
     } else if (JSON.stringify(playlist) === JSON.stringify(player.playlist())) {
       gotoPlayableVideo(playlist, currentIndex);
-      addReport(report);
     }
+    addReport(report);
   }
 }
