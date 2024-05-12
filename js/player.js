@@ -333,6 +333,14 @@ player.on('play', async () => {
   }
 });
 
+player.on('playing', function () {
+  const playlist = this.playlist();
+  const currentIndex = this.playlist.currentIndex();
+  const currentItem = playlist[currentIndex];
+  const { URL_YN: urlYn, FILE_ID: fileId, DEVICE_URL: deviceUrl } = currentItem.report;
+  console.log(`fid=${urlYn === 'Y' ? deviceUrl : fileId}`);
+});
+
 player.on('seeking', () => {
   const playlist = player.playlist();
   const currentIndex = player.playlist.currentIndex();
